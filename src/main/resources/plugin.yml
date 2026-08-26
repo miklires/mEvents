@@ -1,0 +1,14 @@
+name: mEvents
+version: ${version}
+main: io.github.miklires.mevents.MEventsPlugin
+api-version: '26.2'
+author: miklires
+description: Reliable airdrop and boss event engine
+folia-supported: true
+softdepend: [mCases, mBadges, mClans, PlaceholderAPI]
+libraries:
+  - com.h2database:h2:2.3.232
+permissions:
+  mevents.use: { default: true }
+  mevents.admin: { default: op }
+  mevents.reload: { default: op }
