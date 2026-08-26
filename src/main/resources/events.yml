@@ -1,0 +1,25 @@
+events:
+  supply:
+    name: "Сундук снабжения"
+    type: AIRDROP
+    location: { world: world, x: 0, y: 100, z: 0 }
+    preparation-ticks: 100
+    duration-ticks: 1200
+    rewards:
+      - id: supply_iron
+        weight: 70
+        commands: ["give {player} iron_ingot 16"]
+      - id: supply_diamond
+        weight: 30
+        commands: ["give {player} diamond 3"]
+  titan:
+    name: "Титан"
+    type: BOSS
+    location: { world: world, x: 10, y: 65, z: 10 }
+    preparation-ticks: 100
+    duration-ticks: 2400
+    boss: { entity: ZOMBIE, health: 100.0 }
+    rewards:
+      - id: titan_reward
+        weight: 1
+        commands: ["give {player} emerald 5"]

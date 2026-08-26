@@ -8,6 +8,11 @@ folia-supported: true
 softdepend: [mCases, mBadges, mClans, PlaceholderAPI]
 libraries:
   - com.h2database:h2:2.3.232
+commands:
+  event:
+    description: Manage server events
+    usage: /event <list|status|start|stop|reload>
+    aliases: [events, mevents]
 permissions:
   mevents.use: { default: true }
   mevents.admin: { default: op }
