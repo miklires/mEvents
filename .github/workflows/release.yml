@@ -1,6 +1,9 @@
-name: Publish Modrinth
-on: { workflow_dispatch: {} }
-permissions: { contents: read }
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -9,7 +12,10 @@ jobs:
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '25' }
       - uses: gradle/actions/setup-gradle@v6
-      - run: chmod +x gradlew && ./gradlew modrinth
+      - run: chmod +x gradlew && ./gradlew clean build --no-daemon
+      - run: ./gradlew modrinth --no-daemon
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
+      - uses: softprops/action-gh-release@v3
+        with: { files: "build/libs/mEvents-1.1.0.jar" }
