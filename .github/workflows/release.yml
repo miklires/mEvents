@@ -14,6 +14,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - run: chmod +x gradlew && ./gradlew clean build --no-daemon
       - run: ./gradlew modrinth --no-daemon
+        continue-on-error: true
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
