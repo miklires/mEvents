@@ -11,7 +11,7 @@ public final class EventRepository implements AutoCloseable {
     private final String url;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(Thread.ofVirtual().name("mevents-db-", 0).factory());
 
-    public EventRepository(Path file) { this("jdbc:h2:" + file.toAbsolutePath() + ";AUTO_SERVER=TRUE"); }
+    public EventRepository(Path file) { this("jdbc:h2:" + file.toAbsolutePath().normalize() + ";DB_CLOSE_ON_EXIT=FALSE"); }
     EventRepository(String url) { this.url = url; }
 
     public CompletableFuture<Void> initialize() { return run(() -> {
@@ -48,6 +48,9 @@ public final class EventRepository implements AutoCloseable {
     public CompletableFuture<Optional<EventRunView>> active(String template) { return supply(() -> {
         try(Connection c=connection(); PreparedStatement p=c.prepareStatement("SELECT * FROM event_runs WHERE template_id=? AND state IN ('SCHEDULED','PREPARING','ACTIVE') ORDER BY created_at DESC FETCH FIRST 1 ROW ONLY")){p.setString(1,template);try(ResultSet r=p.executeQuery()){return r.next()?Optional.of(map(r)):Optional.empty();}}
     }); }
+    public CompletableFuture<Optional<EventRunView>> latest(String template) { return supply(() -> {
+        try(Connection c=connection();PreparedStatement p=c.prepareStatement("SELECT * FROM event_runs WHERE template_id=? ORDER BY created_at DESC FETCH FIRST 1 ROW ONLY")){p.setString(1,template);try(ResultSet r=p.executeQuery()){return r.next()?Optional.of(map(r)):Optional.empty();}}
+    }); }
 
     public CompletableFuture<Void> addDamage(UUID run, UUID player, String name, double damage) { return run(() -> {
         try(Connection c=connection(); PreparedStatement p=c.prepareStatement("MERGE INTO event_contributions(run_id,player_id,player_name,damage) KEY(run_id,player_id) VALUES(?,?,?,COALESCE((SELECT damage FROM event_contributions WHERE run_id=? AND player_id=?),0)+?)")){p.setObject(1,run);p.setObject(2,player);p.setString(3,name);p.setObject(4,run);p.setObject(5,player);p.setDouble(6,Math.max(0,damage));p.executeUpdate();}
@@ -57,16 +60,24 @@ public final class EventRepository implements AutoCloseable {
         List<Contribution> out=new ArrayList<>();try(Connection c=connection();PreparedStatement p=c.prepareStatement("SELECT player_id,player_name,damage FROM event_contributions WHERE run_id=? ORDER BY damage DESC")){p.setObject(1,run);try(ResultSet r=p.executeQuery()){while(r.next())out.add(new Contribution(r.getObject(1,UUID.class),r.getString(2),r.getDouble(3)));}}return List.copyOf(out);
     }); }
 
-    public CompletableFuture<RewardTransaction> journalReward(UUID run, UUID player, String name, String reward) { return supply(() -> {
-        UUID tx=UUID.randomUUID();Instant now=Instant.now();try(Connection c=connection();PreparedStatement p=c.prepareStatement("INSERT INTO event_rewards VALUES(?,?,?,?,?,FALSE,?)")){p.setObject(1,tx);p.setObject(2,run);p.setObject(3,player);p.setString(4,name);p.setString(5,reward);p.setObject(6,now);p.executeUpdate();}return new RewardTransaction(tx,run,player,name,reward,false,now);
+    public CompletableFuture<RewardTransaction> journalReward(UUID run, String template, UUID player, String name, String reward) { return supply(() -> {
+        try(Connection c=connection();PreparedStatement existing=c.prepareStatement("SELECT transaction_id,reward_id,delivered,created_at FROM event_rewards WHERE run_id=? AND player_id=? FETCH FIRST 1 ROW ONLY")){
+            existing.setObject(1,run);existing.setObject(2,player);try(ResultSet result=existing.executeQuery()){
+                if(result.next())return new RewardTransaction(result.getObject("transaction_id",UUID.class),run,template,player,name,result.getString("reward_id"),result.getBoolean("delivered"),result.getObject("created_at",java.time.OffsetDateTime.class).toInstant());
+            }
+        }
+        UUID tx=UUID.randomUUID();Instant now=Instant.now();try(Connection c=connection();PreparedStatement p=c.prepareStatement("INSERT INTO event_rewards VALUES(?,?,?,?,?,FALSE,?)")){p.setObject(1,tx);p.setObject(2,run);p.setObject(3,player);p.setString(4,name);p.setString(5,reward);p.setObject(6,now);p.executeUpdate();}return new RewardTransaction(tx,run,template,player,name,reward,false,now);
     }); }
 
     public CompletableFuture<List<RewardTransaction>> pendingRewards() { return supply(() -> {
-        List<RewardTransaction> out=new ArrayList<>();try(Connection c=connection();PreparedStatement p=c.prepareStatement("SELECT * FROM event_rewards WHERE delivered=FALSE ORDER BY created_at");ResultSet r=p.executeQuery()){while(r.next())out.add(new RewardTransaction(r.getObject("transaction_id",UUID.class),r.getObject("run_id",UUID.class),r.getObject("player_id",UUID.class),r.getString("player_name"),r.getString("reward_id"),false,r.getObject("created_at",java.time.OffsetDateTime.class).toInstant()));}return List.copyOf(out);
+        List<RewardTransaction> out=new ArrayList<>();try(Connection c=connection();PreparedStatement p=c.prepareStatement("SELECT er.*,runs.template_id FROM event_rewards er JOIN event_runs runs ON runs.run_id=er.run_id WHERE er.delivered=FALSE ORDER BY er.created_at");ResultSet r=p.executeQuery()){while(r.next())out.add(new RewardTransaction(r.getObject("transaction_id",UUID.class),r.getObject("run_id",UUID.class),r.getString("template_id"),r.getObject("player_id",UUID.class),r.getString("player_name"),r.getString("reward_id"),false,r.getObject("created_at",java.time.OffsetDateTime.class).toInstant()));}return List.copyOf(out);
     }); }
 
     public CompletableFuture<Boolean> markDelivered(UUID tx) { return supply(() -> {try(Connection c=connection();PreparedStatement p=c.prepareStatement("UPDATE event_rewards SET delivered=TRUE WHERE transaction_id=? AND delivered=FALSE")){p.setObject(1,tx);return p.executeUpdate()==1;}}); }
     public CompletableFuture<Integer> cancelOrphans() { return supply(() -> {try(Connection c=connection();Statement s=c.createStatement()){return s.executeUpdate("UPDATE event_runs SET state='CANCELLED',detail='startup reconciliation' WHERE state IN ('SCHEDULED','PREPARING','ACTIVE')");}}); }
+    public CompletableFuture<List<EventRunView>> recentRuns(int limit) { return supply(() -> {
+        int safe=Math.max(1,Math.min(limit,100));List<EventRunView> result=new ArrayList<>();try(Connection c=connection();PreparedStatement p=c.prepareStatement("SELECT * FROM event_runs ORDER BY created_at DESC FETCH FIRST ? ROWS ONLY")){p.setInt(1,safe);try(ResultSet r=p.executeQuery()){while(r.next())result.add(map(r));}}return List.copyOf(result);
+    }); }
 
     private Connection connection() throws SQLException { Properties properties=new Properties();properties.setProperty("user","sa");properties.setProperty("password","");return new org.h2.Driver().connect(url,properties); }
     private void audit(UUID id,String action,String detail)throws SQLException{try(Connection c=connection();PreparedStatement p=c.prepareStatement("INSERT INTO event_audit(run_id,action,detail,created_at) VALUES(?,?,?,?)")){p.setObject(1,id);p.setString(2,action);p.setString(3,detail);p.setObject(4,Instant.now());p.executeUpdate();}}
@@ -74,9 +85,9 @@ public final class EventRepository implements AutoCloseable {
     private static Instant instant(ResultSet r,String column)throws SQLException{var v=r.getObject(column,java.time.OffsetDateTime.class);return v==null?null:v.toInstant();}
     private <T> CompletableFuture<T> supply(SqlSupplier<T> task){return CompletableFuture.supplyAsync(()->{try{return task.get();}catch(SQLException e){throw new CompletionException(e);}},executor);}
     private CompletableFuture<Void> run(SqlRunnable task){return supply(()->{task.run();return null;});}
-    @Override public void close(){executor.shutdown();}
+    @Override public void close(){executor.shutdown();try{if(!executor.awaitTermination(5,TimeUnit.SECONDS))executor.shutdownNow();}catch(InterruptedException error){executor.shutdownNow();Thread.currentThread().interrupt();}}
     @FunctionalInterface private interface SqlSupplier<T>{T get()throws SQLException;}
     @FunctionalInterface private interface SqlRunnable{void run()throws SQLException;}
     public record Contribution(UUID playerId,String playerName,double damage){}
-    public record RewardTransaction(UUID transactionId,UUID runId,UUID playerId,String playerName,String rewardId,boolean delivered,Instant createdAt){}
+    public record RewardTransaction(UUID transactionId,UUID runId,String templateId,UUID playerId,String playerName,String rewardId,boolean delivered,Instant createdAt){}
 }
