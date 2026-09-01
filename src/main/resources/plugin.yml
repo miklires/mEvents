@@ -11,9 +11,13 @@ libraries:
 commands:
   event:
     description: Manage server events
-    usage: /event <list|status|start|stop|reload>
+    usage: /event <list|status|history|info|start|stop|reload>
     aliases: [events, mevents]
 permissions:
   mevents.use: { default: true }
-  mevents.admin: { default: op }
+  mevents.admin:
+    default: op
+    children:
+      mevents.use: true
+      mevents.reload: true
   mevents.reload: { default: op }

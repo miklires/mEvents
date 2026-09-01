@@ -1,0 +1,14 @@
+# mEvents runtime settings. Event templates live in events.yml.
+config-version: 2
+
+# Bundled UI languages: en_US and ru_RU.
+language: en_US
+
+# Prevent accidental event floods from commands, the API, or automatic schedules.
+limits:
+  max-concurrent-events: 3
+
+# Anonymous bStats statistics. No player names, UUIDs, locations, or rewards are sent.
+metrics:
+  enabled: true
+  bstats-id: 27941

@@ -1,0 +1,27 @@
+prefix: "<gold><bold>mEvents</bold></gold> <dark_gray>»</dark_gray> "
+command:
+  no-permission: "<red>You do not have permission."
+  not-ready: "<red>Event storage is still starting. Try again shortly."
+  templates: "<gold>Templates:</gold> <white><templates>"
+  active: "<gold>Active:</gold> <white><events>"
+  none-active: "<gray>There are no active events."
+  unknown-template: "<red>Unknown event template: <white><template>"
+  scheduled: "<green>Event scheduled:</green> <white><run>"
+  stopped: "<green>Event stopped."
+  not-found: "<red>Event run not found."
+  reloaded: "<green>Configuration reloaded: <white><loaded></white> templates, <yellow><skipped></yellow> skipped."
+  usage-start: '<yellow>Usage: <white>/event start \<template\>'
+  usage-stop: '<yellow>Usage: <white>/event stop \<run-id\>'
+  usage-info: '<yellow>Usage: <white>/event info \<template\>'
+  usage: '<yellow>Usage: <white>/event \<list|status|history|info|start|stop|reload\>'
+  invalid-run: "<red>Invalid run UUID."
+  info: "<gold><name></gold> <gray>[<type>]</gray> world=<white><world></white>, preparation=<white><preparation>s</white>, duration=<white><duration>s</white>"
+  history: "<gold>Recent runs:</gold> <white><runs>"
+  no-history: "<gray>No event runs have been recorded yet."
+event:
+  countdown: "<gold>[mEvents]</gold> <white><name></white> starts in <yellow><seconds></yellow> seconds."
+  started: "<gold>[mEvents]</gold> <white><name></white> started at <yellow><x> <y> <z></yellow>."
+  ended: "<gold>[mEvents]</gold> <white><name></white> has ended."
+  cancelled: "<gold>[mEvents]</gold> <white><name></white> was cancelled."
+  reward: "<green>Event reward received:</green> <white><reward>"
+  drop-locked: "<yellow>This supply crate unlocks in <white><seconds></white> seconds."

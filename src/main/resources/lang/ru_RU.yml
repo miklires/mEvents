@@ -1,0 +1,27 @@
+prefix: "<gold><bold>mEvents</bold></gold> <dark_gray>»</dark_gray> "
+command:
+  no-permission: "<red>У вас нет прав."
+  not-ready: "<red>Хранилище событий ещё запускается. Повторите чуть позже."
+  templates: "<gold>Шаблоны:</gold> <white><templates>"
+  active: "<gold>Активные:</gold> <white><events>"
+  none-active: "<gray>Активных событий нет."
+  unknown-template: "<red>Неизвестный шаблон: <white><template>"
+  scheduled: "<green>Событие запланировано:</green> <white><run>"
+  stopped: "<green>Событие остановлено."
+  not-found: "<red>Запуск события не найден."
+  reloaded: "<green>Конфигурация перезагружена: <white><loaded></white> шаблонов, <yellow><skipped></yellow> пропущено."
+  usage-start: '<yellow>Использование: <white>/event start \<template\>'
+  usage-stop: '<yellow>Использование: <white>/event stop \<run-id\>'
+  usage-info: '<yellow>Использование: <white>/event info \<template\>'
+  usage: '<yellow>Использование: <white>/event \<list|status|history|info|start|stop|reload\>'
+  invalid-run: "<red>Неверный UUID запуска."
+  info: "<gold><name></gold> <gray>[<type>]</gray> мир=<white><world></white>, подготовка=<white><preparation>с</white>, длительность=<white><duration>с</white>"
+  history: "<gold>Последние запуски:</gold> <white><runs>"
+  no-history: "<gray>Запусков событий пока нет."
+event:
+  countdown: "<gold>[mEvents]</gold> <white><name></white> начнётся через <yellow><seconds></yellow> сек."
+  started: "<gold>[mEvents]</gold> <white><name></white> началось: <yellow><x> <y> <z></yellow>."
+  ended: "<gold>[mEvents]</gold> <white><name></white> завершено."
+  cancelled: "<gold>[mEvents]</gold> <white><name></white> отменено."
+  reward: "<green>Награда события получена:</green> <white><reward>"
+  drop-locked: "<yellow>Сундук откроется через <white><seconds></white> сек."

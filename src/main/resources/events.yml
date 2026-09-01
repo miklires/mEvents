@@ -1,10 +1,20 @@
 events:
   supply:
-    name: "Сундук снабжения"
+    name: "Supply Crate"
     type: AIRDROP
     location: { world: world, x: 0, y: 100, z: 0 }
+    # 20 ticks = one second. Changes apply to new runs after /event reload.
     preparation-ticks: 100
     duration-ticks: 1200
+    cooldown-ticks: 1200
+    airdrop:
+      # Players can see the crate but cannot claim it during this grace period.
+      grace-ticks: 60
+    schedule:
+      enabled: false
+      initial-delay-ticks: 1200
+      interval-ticks: 72000
+      jitter-ticks: 6000
     rewards:
       - id: supply_iron
         weight: 70
@@ -13,12 +23,24 @@ events:
         weight: 30
         commands: ["give {player} diamond 3"]
   titan:
-    name: "Титан"
+    name: "Titan"
     type: BOSS
     location: { world: world, x: 10, y: 65, z: 10 }
     preparation-ticks: 100
     duration-ticks: 2400
-    boss: { entity: ZOMBIE, health: 100.0 }
+    cooldown-ticks: 2400
+    boss:
+      entity: ZOMBIE
+      health: 100.0
+      # Only real damage up to the mob's remaining health is counted.
+      minimum-damage: 5.0
+      # 0 rewards every eligible contributor; otherwise only the top N.
+      maximum-winners: 0
+    schedule:
+      enabled: false
+      initial-delay-ticks: 2400
+      interval-ticks: 144000
+      jitter-ticks: 12000
     rewards:
       - id: titan_reward
         weight: 1
