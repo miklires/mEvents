@@ -19,4 +19,4 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
       - uses: softprops/action-gh-release@v3
-        with: { files: "build/libs/mEvents-1.1.0.jar" }
+        with: { files: "build/libs/mEvents-1.1.1.jar" }
