@@ -31,7 +31,7 @@
 ## Requirements
 
 - Java 25
-- Paper, Purpur, or Folia 26.2
+- Paper, Purpur, or Folia 26.3
 
 ## Installation
 
