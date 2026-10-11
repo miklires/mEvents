@@ -35,7 +35,7 @@
 
 ## Installation
 
-1. Put `mEvents-1.1.0.jar` in the server's `plugins` directory.
+1. Put `mEvents-1.1.1.jar` in the server's `plugins` directory.
 2. Start the server once.
 3. Edit `plugins/mEvents/events.yml`.
 4. Run `/event reload`.
